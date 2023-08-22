@@ -2,6 +2,8 @@ package collector;
 
 import metrics.MetricsRegistry;
 import models.TestSuite;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -9,8 +11,15 @@ import java.util.List;
 
 public class Collector {
 
+    private static final Logger LOGGER = LogManager.getLogger(Collector.class);
+
     public static void collectMetricsFromFilesInPath(String resultsPath) {
         List<File> xunitFiles = listFilesInFolder(resultsPath);
+
+        if (xunitFiles.size() == 0) {
+            LOGGER.warn("No xUnit files were found");
+            return;
+        }
 
         registerMetrics(parseTestSuitesFromXUnits(xunitFiles));
     }

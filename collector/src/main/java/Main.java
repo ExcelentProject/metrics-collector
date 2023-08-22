@@ -23,7 +23,7 @@ public class Main {
         LOGGER.info("Starting collecting metrics");
         Collector.collectMetricsFromFilesInPath(configuration.getXunitFilePath());
 
-        LOGGER.info("Metrics were successfully collected, transitioning to sleep mode");
+        LOGGER.info("Metrics collection completed, transitioning to sleep mode");
         Thread.sleep(configuration.getSleepMs());
 
         LOGGER.info("Shutting down HTTP server");

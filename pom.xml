@@ -21,6 +21,9 @@
 
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
+
+        <maven.checkstyle.version>3.2.0</maven.checkstyle.version>
+        <maven-shade.version>3.2.1</maven-shade.version>
     </properties>
 
     <dependencyManagement>
