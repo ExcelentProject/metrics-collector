@@ -1,0 +1,2 @@
+# mimir
+Test metrics collector
