@@ -17,8 +17,8 @@ public class Collector {
         List<File> xunitFiles = listFilesInFolder(resultsPath);
 
         if (xunitFiles.size() == 0) {
-            LOGGER.warn("No xUnit files were found");
-            return;
+            LOGGER.warn("There are no files on specified file path: {}", resultsPath);
+            throw new RuntimeException("No XML files were found");
         }
 
         registerMetrics(parseTestSuitesFromXUnits(xunitFiles));
@@ -59,7 +59,6 @@ public class Collector {
                     MetricsRegistry.getInstance().getNumOfFlakyTests().increment();
                     MetricsRegistry.getInstance().getNumOfRerunsForFlakyTest(testCase.getNameWithoutParams()).increment(testCase.getFlakyError().size());
                 }
-
             });
         });
     }
