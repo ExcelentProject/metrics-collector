@@ -14,7 +14,7 @@ metadata:
 spec:
   ports:
     - port: 8080
-      name: http
+      name: metrics
       protocol: TCP
       targetPort: 8080
   selector:
@@ -39,20 +39,14 @@ spec:
       serviceAccountName: tealc-metrics-collector
       containers:
         - name: tealc-metrics-collector
-          image: quay.io/lkral/metrics-collector:latest
+          image: quay.io/tealc/metrics-collector:latest
           resources:
             limits:
-              memory: "128Mi"
-              cpu: "1000m"
-            requests:
               memory: "128Mi"
               cpu: "1000m"
           ports:
             - containerPort: 8080
               name: metrics
-              protocol: TCP
-            - containerPort: 8080
-              name: data
               protocol: TCP
   strategy:
     type: Recreate
