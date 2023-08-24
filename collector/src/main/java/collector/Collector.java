@@ -2,64 +2,53 @@ package collector;
 
 import metrics.MetricsRegistry;
 import models.TestSuite;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import server.HttpServer;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class Collector {
 
-    private static final Logger LOGGER = LogManager.getLogger(Collector.class);
+    private static final Logger LOGGER = LogManager.getLogger(HttpServer.class);
 
-    public static void collectMetricsFromFilesInPath(String resultsPath) {
-        List<File> xunitFiles = listFilesInFolder(resultsPath);
+    public static void collectMetricsForInputStream(InputStream inputStream, String runId) throws IOException {
+        File xunitFile = createTempFileFromInputStream(inputStream);
 
-        if (xunitFiles.size() == 0) {
-            LOGGER.warn("There are no files on specified file path: {}", resultsPath);
-            throw new RuntimeException("No XML files were found");
-        }
-
-        registerMetrics(parseTestSuitesFromXUnits(xunitFiles));
+        registerMetrics(parseTestSuiteFromXUnit(xunitFile), runId);
     }
 
-    private static List<File> listFilesInFolder(String resultsPath) {
-        List<File> xunitFiles = new ArrayList<>();
+    private static File createTempFileFromInputStream(InputStream inputStream) throws IOException {
+        File tempFile = File.createTempFile("result",".xml");
 
-        File folder = new File(resultsPath);
+        FileUtils.copyToFile(inputStream, tempFile);
 
-        File[] filesInFolder = folder.listFiles();
+        LOGGER.info("Created temp file for current results: {}", tempFile.getAbsoluteFile());
 
-        for (File file : filesInFolder) {
-            if (file.getName().contains(".xml")) {
-                xunitFiles.add(file);
+        return tempFile;
+    }
+
+    private static TestSuite parseTestSuiteFromXUnit(File xunitFile) {
+        return XUnitParser.parseTestSuite(xunitFile);
+    }
+
+    private static void registerMetrics(TestSuite testSuite, String runId) {
+        LOGGER.info("Registering metrics for TestSuite: {} and RunID: {}", testSuite.getName(), runId);
+
+        double passedTests = testSuite.getTests() - (testSuite.getErrors() + testSuite.getSkipped() + testSuite.getFailures());
+        MetricsRegistry.getInstance().getNumOfPassedTests(runId).increment(passedTests);
+        MetricsRegistry.getInstance().getNumOfFailedTests(runId).increment(testSuite.getFailures() + testSuite.getErrors());
+
+        testSuite.getTestcase().forEach( testCase -> {
+            if (testCase.getFlakyError() != null && !testCase.getFlakyError().isEmpty()) {
+                MetricsRegistry.getInstance().getNumOfFlakyTests(runId).increment();
+                MetricsRegistry.getInstance().getNumOfRerunsForFlakyTest(testCase.getNameWithoutParams(), runId).increment(testCase.getFlakyError().size());
             }
-        }
-
-        return xunitFiles;
-    }
-
-    private static List<TestSuite> parseTestSuitesFromXUnits(List<File> xunitFiles) {
-        List<TestSuite> testSuites = new ArrayList<>();
-
-        xunitFiles.forEach(file -> testSuites.add(XUnitParser.parseTestSuite(file)));
-
-        return testSuites;
-    }
-
-    private static void registerMetrics(List<TestSuite> testSuites) {
-        testSuites.forEach(testSuite -> {
-            double passedTests = testSuite.getTests() - (testSuite.getErrors() + testSuite.getSkipped() + testSuite.getFailures());
-            MetricsRegistry.getInstance().getNumOfPassedTests().increment(passedTests);
-            MetricsRegistry.getInstance().getNumOfFailedTests().increment(testSuite.getFailures() + testSuite.getErrors());
-
-            testSuite.getTestcase().forEach( testCase -> {
-                if (testCase.getFlakyError() != null && testCase.getFlakyError().size() != 0) {
-                    MetricsRegistry.getInstance().getNumOfFlakyTests().increment();
-                    MetricsRegistry.getInstance().getNumOfRerunsForFlakyTest(testCase.getNameWithoutParams()).increment(testCase.getFlakyError().size());
-                }
-            });
         });
+
+        LOGGER.info("All metrics successfully registered for TestSuite: {} and RunID: {}", testSuite.getName(), runId);
     }
 }

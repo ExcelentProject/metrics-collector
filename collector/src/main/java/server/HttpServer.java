@@ -1,5 +1,7 @@
 package server;
 
+import collector.Collector;
+import common.Constants;
 import metrics.MetricsRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,7 +18,7 @@ import java.io.IOException;
 public class HttpServer {
     private static final Logger LOGGER = LogManager.getLogger(HttpServer.class);
     private static final int HTTP_PORT = 8080;
-    private Server server;
+    private final Server server;
 
     public HttpServer() {
         this.server = new Server(HTTP_PORT);
@@ -26,7 +28,12 @@ public class HttpServer {
         metricsContext.setHandler(new MetricsHandler());
         metricsContext.setAllowNullPathInfo(true);
 
-        ContextHandlerCollection contexts = new ContextHandlerCollection(metricsContext);
+        ContextHandler dataContext = new ContextHandler();
+        dataContext.setContextPath("/data");
+        dataContext.setHandler(new DataHandler());
+        dataContext.setAllowNullPathInfo(true);
+
+        ContextHandlerCollection contexts = new ContextHandlerCollection(metricsContext, dataContext);
         server.setHandler(contexts);
     }
 
@@ -54,13 +61,33 @@ public class HttpServer {
         return server;
     }
 
-    public class MetricsHandler extends AbstractHandler {
+    public static class MetricsHandler extends AbstractHandler {
+
         @Override
         public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException {
             response.setContentType("text/plain");
 
             response.setStatus(HttpServletResponse.SC_OK);
             MetricsRegistry.getInstance().getPrometheusMeterRegistry().scrape(response.getWriter());
+
+            baseRequest.setHandled(true);
+        }
+    }
+
+    public static class DataHandler extends AbstractHandler {
+
+        @Override
+        public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException {
+            response.setContentType("text/plain");
+
+            response.setStatus(HttpServletResponse.SC_OK);
+
+            String runId = baseRequest.getHeader(Constants.RUN_ID_HEADER);
+            LOGGER.info("Received data for following run ID: {}", runId);
+
+            Collector.collectMetricsForInputStream(request.getInputStream(), runId);
+
+            response.getWriter().println("ok");
 
             baseRequest.setHandled(true);
         }

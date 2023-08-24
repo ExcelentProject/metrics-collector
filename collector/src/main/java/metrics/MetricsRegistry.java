@@ -15,25 +15,19 @@ public class MetricsRegistry {
 
     private static MetricsRegistry instance = null;
     private final PrometheusMeterRegistry prometheusMeterRegistry;
-    private String runId;
 
     private final Map<String, Counter> numOfPassedTests = new ConcurrentHashMap<>(1);
     private final Map<String, Counter> numOfFailedTests = new ConcurrentHashMap<>(1);
     private final Map<String, Counter> numOfFlakyTests = new ConcurrentHashMap<>(1);
     private final Map<String, Counter> numOfRerunsForFlakyTest = new ConcurrentHashMap<>(1);
 
-    public MetricsRegistry(PrometheusMeterRegistry prometheusMeterRegistry, String runId) {
+    public MetricsRegistry(PrometheusMeterRegistry prometheusMeterRegistry) {
         this.prometheusMeterRegistry = prometheusMeterRegistry;
-        this.runId = runId;
-    }
-
-    public void setRunId(String runId) {
-        this.runId = runId;
     }
 
     public static MetricsRegistry getInstance() {
         if (instance == null) {
-            instance = new MetricsRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT), "none");
+            instance = new MetricsRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT));
         }
         return instance;
     }
@@ -42,41 +36,37 @@ public class MetricsRegistry {
         return prometheusMeterRegistry;
     }
 
-    private String getRunId() {
-        return runId;
-    }
-
-    public Counter getNumOfPassedTests() {
+    public Counter getNumOfPassedTests(String runId) {
         String metricName = METRICS_PREFIX + "passed_tests_total";
-        Tags tags = Tags.of(Tag.of("runId", getRunId()));
-        String description = "The total number of passed tests for run with ID: " + getRunId();
+        Tags tags = Tags.of(Tag.of("runId", runId));
+        String description = "The total number of passed tests for run with ID: " + runId;
         String key = metricName + "," + tags;
 
         return numOfPassedTests.computeIfAbsent(key, func -> counter(metricName, description, tags));
     }
 
-    public Counter getNumOfFailedTests() {
+    public Counter getNumOfFailedTests(String runId) {
         String metricName = METRICS_PREFIX + "failed_tests_total";
-        Tags tags = Tags.of(Tag.of("runId", getRunId()));
-        String description = "The total number of failed tests for run with ID: " + getRunId();
+        Tags tags = Tags.of(Tag.of("runId", runId));
+        String description = "The total number of failed tests for run with ID: " + runId;
         String key = metricName + "," + tags;
 
         return numOfFailedTests.computeIfAbsent(key, func -> counter(metricName, description, tags));
     }
 
-    public Counter getNumOfFlakyTests() {
+    public Counter getNumOfFlakyTests(String runId) {
         String metricName = METRICS_PREFIX + "flaky_tests_total";
-        Tags tags = Tags.of(Tag.of("runId", getRunId()));
-        String description = "The total number of flaky tests for run with ID: " + getRunId();
+        Tags tags = Tags.of(Tag.of("runId", runId));
+        String description = "The total number of flaky tests for run with ID: " + runId;
         String key = metricName + "," + tags;
 
         return numOfFlakyTests.computeIfAbsent(key, func -> counter(metricName, description, tags));
     }
 
-    public Counter getNumOfRerunsForFlakyTest(String testCaseName) {
+    public Counter getNumOfRerunsForFlakyTest(String testCaseName, String runId) {
         String metricName = METRICS_PREFIX + "num_of_test_rerun";
-        Tags tags = Tags.of(Tag.of("runId", getRunId()), Tag.of("testCaseName", testCaseName));
-        String description = "Number of reruns for a test and run with ID: " + getRunId();
+        Tags tags = Tags.of(Tag.of("runId", runId), Tag.of("testCaseName", testCaseName));
+        String description = "Number of reruns for a test and run with ID: " + runId;
         String key = metricName + "," + tags;
 
         return numOfRerunsForFlakyTest.computeIfAbsent(key, func -> counter(metricName, description, tags));
