@@ -31,7 +31,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
-          context: ./metrics-collector
+          context: ./docker-image
           file: ./docker-image/Dockerfile
           push: true
           tags: quay.io/tealc/metrics-collector:latest
