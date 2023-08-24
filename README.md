@@ -1,24 +1,17 @@
 # TEALC - metrics collector
 
-Metrics collector developer for scraping information from xUnit files, mainly from the Thor testsuite.</br>
-The collector does following:
+Metrics collector developed for scraping information from xUnit files, mainly from the Thor testsuite.</br>
+For collecting metrics from xUnit files, you will need to cURL the data to the `8080` port and `/data` endpoint.
 
-1. List all files with `.xml` suffix on specified path (via environmental variable)
-2. Parses all the objects from each file to - `TestSuite`, `TestCase`
-3. Goes through each `TestSuite` -> `TestCase`
-4. Collects all the information to the Prometheus exporter
-5. Exposes the metrics via `/metrics` endpoint
-6. Sleeps for the specified time (via environmental variable)
+For specifying the run ID, you need to use `X-Run-ID` header and exec cURL command as follows:
 
-## Environmental variables
+```shell
+curl -X POST -H "X-Run-ID: MY_ID" -d @/path/to/file HOSTNAME:8080/data
+```
 
-Here is the list of environmental variables you can specify:
+The binary data are then converted to temp file, from which is everything gathered.
 
-| Environment variable | Type   | Description                                                          |
-|----------------------|--------|----------------------------------------------------------------------|
-| `XUNIT_FILE_PATH`    | String | path to the folder with results in `.xml` format                     |
-| `SLEEP_MS`           | int    | desired time to sleep after metrics collection, in milliseconds      |
-| `RUN_ID`             | String | ID of the test execution - for separation of test runs in dashboards |
+Collected metrics are exposed under `8080` port and `/metrics` endpoint.
 
 ## Exposed metrics
 
