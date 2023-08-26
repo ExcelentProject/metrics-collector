@@ -43,7 +43,7 @@ public class MetricsRegistry {
         String description = "The total number of passed tests for run with ID: " + runId;
         String key = metricName;
 
-        return numOfPassedTests.computeIfAbsent(key, func -> counter(metricName, description, tags));
+        return numOfPassedTests.computeIfAbsent(key, func -> gauge(metricName, description, tags));
     }
 
     public AtomicInteger getNumOfFailedTests(String runId) {
@@ -52,7 +52,7 @@ public class MetricsRegistry {
         String description = "The total number of failed tests for run with ID: " + runId;
         String key = metricName;
 
-        return numOfFailedTests.computeIfAbsent(key, func -> counter(metricName, description, tags));
+        return numOfFailedTests.computeIfAbsent(key, func -> gauge(metricName, description, tags));
     }
 
     public AtomicInteger getNumOfFlakyTests(String runId) {
@@ -61,7 +61,7 @@ public class MetricsRegistry {
         String description = "The total number of flaky tests for run with ID: " + runId;
         String key = metricName;
 
-        return numOfFlakyTests.computeIfAbsent(key, func -> counter(metricName, description, tags));
+        return numOfFlakyTests.computeIfAbsent(key, func -> gauge(metricName, description, tags));
     }
 
     public AtomicInteger getNumOfRerunsForFlakyTest(String testCaseName, String runId) {
@@ -70,10 +70,10 @@ public class MetricsRegistry {
         String description = "Number of reruns for a test and run with ID: " + runId;
         String key = metricName;
 
-        return numOfRerunsForFlakyTest.computeIfAbsent(key, func -> counter(metricName, description, tags));
+        return numOfRerunsForFlakyTest.computeIfAbsent(key, func -> gauge(metricName, description, tags));
     }
 
-    private AtomicInteger counter(String metricName, String metricDescription, Tags tags) {
+    private AtomicInteger gauge(String metricName, String metricDescription, Tags tags) {
         AtomicInteger gauge = new AtomicInteger(0);
         Gauge.builder(metricName, () -> gauge)
                 .description(metricDescription)
