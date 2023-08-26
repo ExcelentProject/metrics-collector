@@ -40,18 +40,19 @@ public class Collector {
         LOGGER.info("Registering metrics for TestSuite: {} and RunID: {}", testSuite.getName(), runId);
 
         int passedTests = testSuite.getTests() - (testSuite.getErrors() + testSuite.getSkipped() + testSuite.getFailures());
-        MetricsRegistry.getInstance().getNumOfPassedTests(runId).set(passedTests);
-        MetricsRegistry.getInstance().getNumOfFailedTests(runId).set(testSuite.getFailures() + testSuite.getErrors());
+        MetricsRegistry.getInstance().getNumOfPassedTests(testSuite.getName(), runId).set(passedTests);
+        MetricsRegistry.getInstance().getNumOfFailedTests(testSuite.getName(), runId).set(testSuite.getFailures() + testSuite.getErrors());
 
         AtomicInteger flakyTests = new AtomicInteger();
 
         testSuite.getTestcase().forEach( testCase -> {
             if (testCase.getFlakyError() != null && !testCase.getFlakyError().isEmpty()) {
                 flakyTests.getAndIncrement();
-                MetricsRegistry.getInstance().getNumOfRerunsForFlakyTest(testCase.getNameWithoutParams(), runId).set(testCase.getFlakyError().size());
+                MetricsRegistry.getInstance().getNumOfRerunsForFlakyTest(testSuite.getName(),
+                        testCase.getNameWithoutParams(), runId).set(testCase.getFlakyError().size());
             }
         });
-        MetricsRegistry.getInstance().getNumOfFlakyTests(runId).set(flakyTests.intValue());
+        MetricsRegistry.getInstance().getNumOfFlakyTests(testSuite.getName(), runId).set(flakyTests.intValue());
 
 
         LOGGER.info("All metrics successfully registered for TestSuite: {} and RunID: {}", testSuite.getName(), runId);
