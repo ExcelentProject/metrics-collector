@@ -40,7 +40,7 @@ public class MetricsRegistry {
         String metricName = METRICS_PREFIX + "passed_tests_total";
         Tags tags = Tags.of(Tag.of("runId", runId));
         String description = "The total number of passed tests for run with ID: " + runId;
-        String key = metricName + "," + tags;
+        String key = metricName;
 
         return numOfPassedTests.computeIfAbsent(key, func -> counter(metricName, description, tags));
     }
@@ -49,7 +49,7 @@ public class MetricsRegistry {
         String metricName = METRICS_PREFIX + "failed_tests_total";
         Tags tags = Tags.of(Tag.of("runId", runId));
         String description = "The total number of failed tests for run with ID: " + runId;
-        String key = metricName + "," + tags;
+        String key = metricName;
 
         return numOfFailedTests.computeIfAbsent(key, func -> counter(metricName, description, tags));
     }
@@ -58,7 +58,7 @@ public class MetricsRegistry {
         String metricName = METRICS_PREFIX + "flaky_tests_total";
         Tags tags = Tags.of(Tag.of("runId", runId));
         String description = "The total number of flaky tests for run with ID: " + runId;
-        String key = metricName + "," + tags;
+        String key = metricName;
 
         return numOfFlakyTests.computeIfAbsent(key, func -> counter(metricName, description, tags));
     }
@@ -67,7 +67,7 @@ public class MetricsRegistry {
         String metricName = METRICS_PREFIX + "num_of_test_rerun";
         Tags tags = Tags.of(Tag.of("runId", runId), Tag.of("testCaseName", testCaseName));
         String description = "Number of reruns for a test and run with ID: " + runId;
-        String key = metricName + "," + tags;
+        String key = metricName;
 
         return numOfRerunsForFlakyTest.computeIfAbsent(key, func -> counter(metricName, description, tags));
     }
