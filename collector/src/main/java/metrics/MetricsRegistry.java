@@ -37,38 +37,38 @@ public class MetricsRegistry {
         return prometheusMeterRegistry;
     }
 
-    public AtomicInteger getNumOfPassedTests(String runId) {
+    public AtomicInteger getNumOfPassedTests(String testSuiteName, String runId) {
         String metricName = METRICS_PREFIX + "passed_tests_total";
-        Tags tags = Tags.of(Tag.of("runId", runId));
+        Tags tags = Tags.of(Tag.of("runId", runId), Tag.of("testSuiteName", testSuiteName));
         String description = "The total number of passed tests for run with ID: " + runId;
-        String key = metricName;
+        String key = metricName + "," + testSuiteName;
 
         return numOfPassedTests.computeIfAbsent(key, func -> gauge(metricName, description, tags));
     }
 
-    public AtomicInteger getNumOfFailedTests(String runId) {
+    public AtomicInteger getNumOfFailedTests(String testSuiteName, String runId) {
         String metricName = METRICS_PREFIX + "failed_tests_total";
-        Tags tags = Tags.of(Tag.of("runId", runId));
+        Tags tags = Tags.of(Tag.of("runId", runId), Tag.of("testSuiteName", testSuiteName));
         String description = "The total number of failed tests for run with ID: " + runId;
-        String key = metricName;
+        String key = metricName + "," + testSuiteName;
 
         return numOfFailedTests.computeIfAbsent(key, func -> gauge(metricName, description, tags));
     }
 
-    public AtomicInteger getNumOfFlakyTests(String runId) {
+    public AtomicInteger getNumOfFlakyTests(String testSuiteName, String runId) {
         String metricName = METRICS_PREFIX + "flaky_tests_total";
-        Tags tags = Tags.of(Tag.of("runId", runId));
+        Tags tags = Tags.of(Tag.of("runId", runId), Tag.of("testSuiteName", testSuiteName));
         String description = "The total number of flaky tests for run with ID: " + runId;
-        String key = metricName;
+        String key = metricName + "," + testSuiteName;
 
         return numOfFlakyTests.computeIfAbsent(key, func -> gauge(metricName, description, tags));
     }
 
-    public AtomicInteger getNumOfRerunsForFlakyTest(String testCaseName, String runId) {
+    public AtomicInteger getNumOfRerunsForFlakyTest(String testSuiteName, String testCaseName, String runId) {
         String metricName = METRICS_PREFIX + "num_of_test_rerun";
-        Tags tags = Tags.of(Tag.of("runId", runId), Tag.of("testCaseName", testCaseName));
+        Tags tags = Tags.of(Tag.of("runId", runId), Tag.of("testCaseName", testCaseName), Tag.of("testSuiteName", testSuiteName));
         String description = "Number of reruns for a test and run with ID: " + runId;
-        String key = metricName;
+        String key = metricName + "," + testSuiteName;
 
         return numOfRerunsForFlakyTest.computeIfAbsent(key, func -> gauge(metricName, description, tags));
     }
