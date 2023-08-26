@@ -10,6 +10,7 @@ import server.HttpServer;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Collector {
 
@@ -38,16 +39,20 @@ public class Collector {
     private static void registerMetrics(TestSuite testSuite, String runId) {
         LOGGER.info("Registering metrics for TestSuite: {} and RunID: {}", testSuite.getName(), runId);
 
-        double passedTests = testSuite.getTests() - (testSuite.getErrors() + testSuite.getSkipped() + testSuite.getFailures());
-        MetricsRegistry.getInstance().getNumOfPassedTests(runId).increment(passedTests);
-        MetricsRegistry.getInstance().getNumOfFailedTests(runId).increment(testSuite.getFailures() + testSuite.getErrors());
+        int passedTests = testSuite.getTests() - (testSuite.getErrors() + testSuite.getSkipped() + testSuite.getFailures());
+        MetricsRegistry.getInstance().getNumOfPassedTests(runId).set(passedTests);
+        MetricsRegistry.getInstance().getNumOfFailedTests(runId).set(testSuite.getFailures() + testSuite.getErrors());
+
+        AtomicInteger flakyTests = new AtomicInteger();
 
         testSuite.getTestcase().forEach( testCase -> {
             if (testCase.getFlakyError() != null && !testCase.getFlakyError().isEmpty()) {
-                MetricsRegistry.getInstance().getNumOfFlakyTests(runId).increment();
-                MetricsRegistry.getInstance().getNumOfRerunsForFlakyTest(testCase.getNameWithoutParams(), runId).increment(testCase.getFlakyError().size());
+                flakyTests.getAndIncrement();
+                MetricsRegistry.getInstance().getNumOfRerunsForFlakyTest(testCase.getNameWithoutParams(), runId).set(testCase.getFlakyError().size());
             }
         });
+        MetricsRegistry.getInstance().getNumOfFlakyTests(runId).set(flakyTests.intValue());
+
 
         LOGGER.info("All metrics successfully registered for TestSuite: {} and RunID: {}", testSuite.getName(), runId);
     }
